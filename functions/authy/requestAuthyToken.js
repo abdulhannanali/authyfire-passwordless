@@ -14,9 +14,9 @@ const GCLOUD_PROJECT = process.env.GCLOUD_PROJECT;
 const AUTHY_API_KEY = functions.config().authy.apikey;
 
 const authyClient = authy(AUTHY_API_KEY);
- 
+
 const defaultDb = admin.database();
-const authyRef = defaultDb.ref('custom-auth/authy');
+const authyRef  =  defaultDb.ref('custom-auth/authy');
 
 /**
  * Authenticates a Phone Number and sends the verification code
@@ -43,6 +43,9 @@ function requestAuthyToken(req, res) {
       const phoneNumber = sanitizeNumber(body.phoneNumber);
       const phoneId = countryCode + phoneNumber;
 
+      // TODO Implement forceSms Completely
+      const forceSms = !!body.forceSms;
+
       if (phoneId.length > 15) {
         return handleError({ code: 'number-too-long' });
       }
@@ -53,7 +56,7 @@ function requestAuthyToken(req, res) {
         }
 
         console.info('AuthyId accquired for the user, now sending a token');
-        return sendToken(authyId, function(error, result) {
+        return sendToken(authyId, phoneId, forceSms, function(error, result) {
           if (error) {
             handleError(error);
           } else {
@@ -71,18 +74,27 @@ function requestAuthyToken(req, res) {
  * 
  * TODO: The first Code should be received through the SMS in order to make things simple.
  */
-function sendToken(authyId, callback) {
-  authyClient.request_sms(authyId, function(error, result) {
+function sendToken(authyId, phoneId, forceSms, callback) {
+  if (forceSms) {
+    authyClient.request_sms(authyId, forceSms, tokenHandler);
+  } else {
+    authyClient.request_sms(authyId, tokenHandler);
+  }
+  
+  function tokenHandler(error, result) {
     if (error) {
       callback(error);
     } else {
+      result.phoneId = phoneId;
       callback(undefined, result);
     }
-  });
+  }
 }
 
 /**
  * Gets an Authy User
+ * If the user for the given `countryCode` and `phoneNumber`
+ * is not already there, this registers a new user
  */
 function getAuthyUser(countryCode, phoneNumber, phoneId, callback) {
   console.info('Getting Authy User ID for phoneId ', phoneId);
@@ -136,18 +148,34 @@ function registerAuthyUser(countryCode, phoneNumber, phoneId, callback) {
       callback(error);
     } else if (result && result.user && result.user.id) {
       const authyId = result.user.id;
-      authyRef.child(phoneId).set({ 
-        id: authyId,
-        isRegistered: false,
-        verified: false,
-        email: userEmail,
-        tokens: 0,
-      }).then(
-        snapshot => callback(undefined, authyId)
-      ).catch(
-        error => callback(error)
-      );
+      createAuthyData(phoneId)
+        .then(
+          snapshot => callback(undefined, authyId)
+        ).catch(
+          error => callback(error)
+        );
     }
+  });
+}
+
+/**
+ * Initializes authy data object for the given `phoneId`
+ * The data object refers to the following ref path
+ * - `root/custom-auth/authy/${phoneId}/authyObj`
+ * 
+ * where `authyObj` is data assigned in this `function`
+ * and `phoneId` is the reference id of the phone 
+ */
+function createAuthyData(phoneId) {
+  return authyRef.child(phoneId).set({
+    totalAttempts: 0,
+    totalFailedAttempts: 0,
+    totalSuccessAttempts: 0,
+    lastTokenAssigned: 0,
+    triesSinceLastAttempt: 0,
+    totalAssigned: 0,
+    suspended: false,
+    verified: false,
   });
 }
 

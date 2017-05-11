@@ -14,7 +14,10 @@ function handleError(res, error) {
   if (error.code === 'parameter-missing') {
     return sendError(400, {message: `Parameter ${error.param} is missing`, code: error.code, param: error.param });
   } else if (error.code === 'number-too-long') {
-    return sendError(400, { message: 'We currently don\'t deal with such long alien numbers.', code: error.code });
+    return sendError(
+      400, 
+      {message: 'We currently don\'t deal with such long alien numbers.', code: error.code}
+    );
   } else if (error.code === 'phone-not-registered') {
     return sendError(
       400,
