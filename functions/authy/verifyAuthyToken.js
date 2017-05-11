@@ -26,9 +26,9 @@ function verifyAuthyToken(req, res) {
       const token = req.body.token;
 
       if (!phoneId) {
-        handleError({ code: 'parameter-missing', param: 'phoneId' });
+        return handleError({ code: 'parameter-missing', param: 'phoneId' });
       } else if (!token) {
-        handleError({ code: 'parameter-missing', param: 'token' });
+        return handleError({ code: 'parameter-missing', param: 'token' });
       }
 
       res.cookie('phoneId', undefined);
