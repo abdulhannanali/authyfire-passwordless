@@ -6,12 +6,14 @@ const admin = require('../admin');
 const errorResponse = require('./handleError');
 
 const cors = require('cors')({ origin: true });
-const cookieParser = require('cookie-parser')();
 
 const defaultDb = admin.database();
 const authyRef = defaultDb.ref('custom-auth/authy');
 
+const COOKIE_SECRET = functions.config().cookies.secret || undefined;
 const UID_PREFIX = 'phone';
+
+const cookieParser = require('cookie-parser')(COOKIE_SECRET);
 
 /**
  * Verifies the token using Authy and authenticates if the authentication
@@ -31,11 +33,12 @@ function verifyAuthyToken(req, res) {
         return handleError({ code: 'parameter-missing', param: 'token' });
       }
 
-      if (phoneId.length > 15 || token.length > 10) {
-        return handleError({ code: 'number-too-long' });
+      if (phoneId.length > 15) {
+        return handleError({ code: 'number-too-long', param: 'phoneId' });
+      } else if (token.length > 10) {
+        return handleError({ code: 'number-too-long', param: 'token' });
       }
 
-      res.cookie('phoneId', undefined);
       getAuthyData(phoneId)
         .then(authyData => {
           const authyId = authyData && authyData.id;
@@ -51,9 +54,10 @@ function verifyAuthyToken(req, res) {
               createFirebaseUser(phoneId, authyData)
                 .then(function(user) {
                   updateAuthyData(true, phoneId, user);
-                  return createCustomToken(user, authyData).then(
-                    handleCustomToken.bind(this, res, user, authyData)
-                  );
+                  return createCustomToken(user, authyData).then(() => {
+                    res.cookie('phoneId', undefined);
+                    handleCustomToken.bind(this, res, user, authyData);
+                  });
                 })
                 .catch(function(error) {
                   handleError(error);

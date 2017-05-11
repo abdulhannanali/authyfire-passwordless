@@ -1,5 +1,4 @@
 const functions = require('firebase-functions');
-const cookieParser = require('cookie-parser')();
 const authy = require('authy');
 
 const cors = require('cors')({
@@ -12,8 +11,10 @@ const errorResponse = require('./handleError');
 
 const GCLOUD_PROJECT = process.env.GCLOUD_PROJECT;
 const AUTHY_API_KEY = functions.config().authy.apikey;
+const COOKIE_SECRET = functions.config().cookies.secret || undefined;
 
 const authyClient = authy(AUTHY_API_KEY);
+const cookieParser = require('cookie-parser')(COOKIE_SECRET);
 
 const defaultDb = admin.database();
 const authyRef  =  defaultDb.ref('custom-auth/authy');

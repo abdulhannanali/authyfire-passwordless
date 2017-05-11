@@ -16,7 +16,7 @@ function handleError(res, error) {
   } else if (error.code === 'number-too-long') {
     return sendError(
       400, 
-      {message: 'We currently don\'t deal with such long alien numbers.', code: error.code}
+      {message: 'This number is too long to be human for us :)', code: error.code, param: error.param}
     );
   } else if (error.code === 'phone-not-registered') {
     return sendError(
