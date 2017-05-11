@@ -31,10 +31,14 @@ function verifyAuthyToken(req, res) {
         return handleError({ code: 'parameter-missing', param: 'token' });
       }
 
+      if (phoneId.length > 15 || token.length > 10) {
+        return handleError({ code: 'number-too-long' });
+      }
+
       res.cookie('phoneId', undefined);
       getAuthyData(phoneId)
         .then(authyData => {
-          const authyId = authyData.id;
+          const authyId = authyData && authyData.id;
 
           if (!authyId) {
             return handleError(400, { code: 'phone-not-registered', phoneId: phoneId });
@@ -46,7 +50,7 @@ function verifyAuthyToken(req, res) {
             } else if (result && result.token === 'is valid' && result.success) {
               createFirebaseUser(phoneId, authyData)
                 .then(function(user) {
-                  updateAuthyData(phoneId, user);
+                  updateAuthyData(true, phoneId, user);
                   return createCustomToken(user, authyData).then(
                     handleCustomToken.bind(this, res, user, authyData)
                   );
@@ -132,22 +136,32 @@ function createCustomToken(uid, authyData) {
  * Updates the Authy specific Authentication data for the given phoneId
  * Useful for tracking attempts and the future logins.
  */
-function updateAuthyData(phoneId, user) {
+function updateAuthyData(success, phoneId, user) {
   const authyChildRef = authyRef.child(phoneId);
   const TIMESTAMP = admin.database.ServerValue.TIMESTAMP;
+  let authyTask;
 
-  return authyChildRef.transaction(authyData => {
-    authyData.attempts++;
-    authyData.successAttempts++;
+  if (success) {
+    authyTask = authyChildRef.transaction(authyData => {
+      // Stores the data in case of success, resets the state of 
+      // certain properties so they can work properly in the future
+      authyData.totalAttempts++;
+      authyData.totalSuccessAttempts++;
 
-    authyData.lastAttempt =
-    authyData.lastSuccessAttempt = TIMESTAMP;
-    authyData.verified = true;
-    authyData.uid = user.uid;
+      authyData.lastAttempt =
+      authyData.lastSuccessAttempt = TIMESTAMP;
+      authyData.verified = true;
+      authyData.suspended = false;
+      authyData.uid = user.uid;
 
-    return authyData;
-  }).then((error) => {
-    console.error('Failed to update the authy data for given phoneId ' + phoneId);
+      return authyData;
+    });
+  }
+
+  return authyTask.then(authySnapshot => {
+    console.info('Authy data successfull updated for ' + phoneId);
+  }).catch(error => {
+    console.error('Error occured while updating authyData for ' + phoneId);
     console.error(error);
   });
 }
