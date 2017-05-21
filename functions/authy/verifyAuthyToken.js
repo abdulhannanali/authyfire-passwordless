@@ -26,7 +26,7 @@ function verifyAuthyToken(req, res) {
     cors(req, res, () => {
       const handleError = errorResponse.bind(this, res);
 
-      const phoneId = req.cookies.phoneId || req.body.phoneId;
+      const phoneId = req.body.phoneId || req.cookies.phoneId;
       const token = req.body.token;
 
       if (req.method !== 'POST') {
@@ -47,23 +47,26 @@ function verifyAuthyToken(req, res) {
         return handleError({ code: 'number-too-long', param: 'token' });
       }
       
-      getAuthyData(phoneId)
+      return getAuthyData(phoneId)
         .then(authyData => {
           const authyId = authyData && authyData.id;
 
           if (!authyId) { 
-            return handleError(400, { code: 'phone-not-registered', phoneId: phoneId });
+            return handleError({ code: 'phone-not-registered', phoneId: phoneId });
           }
 
           return verifyToken(authyId, token, (error, result) => {
+            console.info(
+              `token: ${token} authyId: ${authyId} result: ${JSON.stringify(result)}`
+            );
             if (error) {
-              handleError(error);
+              return handleError(error);
             } else if (result && result.token === 'is valid' && result.success) {
               createFirebaseUser(phoneId)
                 .then(function(user) {
-                  return createCustomToken(user).then(() => {
+                  return createCustomToken(user).then(customToken => {
                     res.cookie('phoneId', undefined);
-                    return handleCustomToken.bind(this, res, user, authyData);
+                    return handleCustomToken.bind(this, res, user)(customToken);
                   });
                 })
                 .catch(error => handleError(error));
@@ -79,15 +82,12 @@ function verifyAuthyToken(req, res) {
  * Handles the Custom Token Response and provide user with useful input 
  * it can use for it's output
  */
-function handleCustomToken(res, user, authyData, customToken) {
-  if (customToken) {
-    res.json({
-      uid: user.uid,
-      lastVerificationDevice: authyData && authyData.lastDevice,
-      success: true,
-      customToken: customToken,
-    });
-  }
+function handleCustomToken(res, user, customToken) {
+  res.json({
+    uid: user.uid,
+    success: true,
+    customToken: customToken,
+  });
 }
 
 /**
