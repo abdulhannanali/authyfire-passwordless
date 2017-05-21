@@ -5,8 +5,6 @@ const authyClient = require('authy')(functions.config().authy.apikey);
 const admin = require('../admin');
 const errorResponse = require('./handleError');
 
-const cors = require('cors')({ origin: true });
-
 const defaultDb = admin.database();
 const authyRef = defaultDb.ref('custom-auth/authy');
 
@@ -14,6 +12,10 @@ const COOKIE_SECRET = functions.config().cookies.secret || undefined;
 const UID_PREFIX = 'phone';
 
 const cookieParser = require('cookie-parser')(COOKIE_SECRET);
+const cors = require('cors')({
+  origin: true,
+  methods: ['POST'],
+});
 
 /**
  * Verifies the token using Authy and authenticates if the authentication
@@ -27,9 +29,15 @@ function verifyAuthyToken(req, res) {
       const phoneId = req.cookies.phoneId || req.body.phoneId;
       const token = req.body.token;
 
+      if (req.method !== 'POST') {
+        return res.json(400, 'Method not supported');
+      }
+
       if (!phoneId) {
         return handleError({ code: 'parameter-missing', param: 'phoneId' });
-      } else if (!token) {
+      } 
+
+      if (!token) {
         return handleError({ code: 'parameter-missing', param: 'token' });
       }
 
@@ -43,10 +51,6 @@ function verifyAuthyToken(req, res) {
         .then(authyData => {
           const authyId = authyData && authyData.id;
 
-          /**
-           * TODO: Perform more validations here
-           *       to check if we need to verify and login the user or not
-           */
           if (!authyId) { 
             return handleError(400, { code: 'phone-not-registered', phoneId: phoneId });
           }
@@ -129,7 +133,7 @@ function createFirebaseUser(phoneId) {
  * This custom token is passed to the client in order to sign in with in the application
  */
 function createCustomToken({ uid }) {
-  return admin.auth().createCustomToken(uid {});
+  return admin.auth().createCustomToken(uid, {});
 }
 
 /**
