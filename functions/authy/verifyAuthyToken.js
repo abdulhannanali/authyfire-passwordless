@@ -38,12 +38,16 @@ function verifyAuthyToken(req, res) {
       } else if (token.length > 10) {
         return handleError({ code: 'number-too-long', param: 'token' });
       }
-
+      
       getAuthyData(phoneId)
         .then(authyData => {
           const authyId = authyData && authyData.id;
 
-          if (!authyId) {
+          /**
+           * TODO: Perform more validations here
+           *       to check if we need to verify and login the user or not
+           */
+          if (!authyId) { 
             return handleError(400, { code: 'phone-not-registered', phoneId: phoneId });
           }
 
@@ -51,23 +55,18 @@ function verifyAuthyToken(req, res) {
             if (error) {
               handleError(error);
             } else if (result && result.token === 'is valid' && result.success) {
-              createFirebaseUser(phoneId, authyData)
+              createFirebaseUser(phoneId)
                 .then(function(user) {
-                  updateAuthyData(true, phoneId, user);
-                  return createCustomToken(user, authyData).then(() => {
+                  return createCustomToken(user).then(() => {
                     res.cookie('phoneId', undefined);
-                    handleCustomToken.bind(this, res, user, authyData);
+                    return handleCustomToken.bind(this, res, user, authyData);
                   });
                 })
-                .catch(function(error) {
-                  handleError(error);
-                });
+                .catch(error => handleError(error));
             }
           });
         })
-        .catch(error => {
-          handleError(error);
-        });
+        .catch(error => handleError(error));
     });
   });
 }
@@ -108,7 +107,7 @@ function getAuthyData(phoneId) {
  * creates a custom token which is passed to the client 
  * for the purpose of Signing in
  */
-function createFirebaseUser(phoneId, authyId) {
+function createFirebaseUser(phoneId) {
   const uid = toUid(phoneId);
   return admin.auth().getUser(uid)
     .then(user => {
@@ -129,45 +128,8 @@ function createFirebaseUser(phoneId, authyId) {
  * Creates a Custom Token with special claims for Phone Based Verification
  * This custom token is passed to the client in order to sign in with in the application
  */
-function createCustomToken(uid, authyData) {
-  return admin.auth().createCustomToken(uid, {
-    isFirstTime: authyData.isNew,
-    verificationDevice: authyData.lastDevice, 
-  });
-}
-
-/**
- * Updates the Authy specific Authentication data for the given phoneId
- * Useful for tracking attempts and the future logins.
- */
-function updateAuthyData(success, phoneId, user) {
-  const authyChildRef = authyRef.child(phoneId);
-  const TIMESTAMP = admin.database.ServerValue.TIMESTAMP;
-  let authyTask;
-
-  if (success) {
-    authyTask = authyChildRef.transaction(authyData => {
-      // Stores the data in case of success, resets the state of 
-      // certain properties so they can work properly in the future
-      authyData.totalAttempts++;
-      authyData.totalSuccessAttempts++;
-
-      authyData.lastAttempt =
-      authyData.lastSuccessAttempt = TIMESTAMP;
-      authyData.verified = true;
-      authyData.suspended = false;
-      authyData.uid = user.uid;
-
-      return authyData;
-    });
-  }
-
-  return authyTask.then(authySnapshot => {
-    console.info('Authy data successfull updated for ' + phoneId);
-  }).catch(error => {
-    console.error('Error occured while updating authyData for ' + phoneId);
-    console.error(error);
-  });
+function createCustomToken({ uid }) {
+  return admin.auth().createCustomToken(uid {});
 }
 
 /**

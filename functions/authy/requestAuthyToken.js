@@ -44,7 +44,6 @@ function requestAuthyToken(req, res) {
       const phoneNumber = sanitizeNumber(body.phoneNumber);
       const phoneId = countryCode + phoneNumber;
 
-      // TODO Implement forceSms Completely
       const forceSms = !!body.forceSms;
 
       if (phoneId.length > 15) {
@@ -106,14 +105,7 @@ function getAuthyUser(countryCode, phoneNumber, phoneId, callback) {
       callback(undefined, authyId);
     } else {
       console.info('Registering the Authy ID for the new number with phone id ' + phoneId);
-      registerAuthyUser(countryCode, phoneNumber, phoneId, function(error, result) {
-        if (error) {
-          callback(error);
-        } else if (result) {
-          const authyId = result && result.user.id;
-          callback(undefined, authyId);
-        }
-      });
+      registerAuthyUser(countryCode, phoneNumber, phoneId, callback);
     }
   }).catch(error => callback(error));
 }
@@ -149,7 +141,7 @@ function registerAuthyUser(countryCode, phoneNumber, phoneId, callback) {
       callback(error);
     } else if (result && result.user && result.user.id) {
       const authyId = result.user.id;
-      createAuthyData(phoneId)
+      createAuthyData(phoneId, authyId)
         .then(
           snapshot => callback(undefined, authyId)
         ).catch(
@@ -167,7 +159,7 @@ function registerAuthyUser(countryCode, phoneNumber, phoneId, callback) {
  * where `authyObj` is data assigned in this `function`
  * and `phoneId` is the reference id of the phone 
  */
-function createAuthyData(phoneId) {
+function createAuthyData(phoneId, authyId) {
   return authyRef.child(phoneId).set({
     totalAttempts: 0,
     totalFailedAttempts: 0,
@@ -177,6 +169,7 @@ function createAuthyData(phoneId) {
     totalAssigned: 0,
     suspended: false,
     verified: false,
+    id: authyId,
   });
 }
 
