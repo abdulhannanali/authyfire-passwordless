@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "translate-project-166509"
+    "default": "translate-project-166509",
+    "tp": "translate-project-166509"
   }
 }

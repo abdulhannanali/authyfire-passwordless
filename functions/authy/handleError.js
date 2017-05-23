@@ -30,12 +30,10 @@ function handleError(res, error) {
 }
 
 function handleAuthyError(res, error) {
-  const error_code = error && error.error_code;
+  const error_code = Number.parseInt((error && error.error_code) || 0, 10);
 
   if (
-     error_code === '60027'
-     || error_code === '60016'
-     || error_code === '60017'
+     error_code > 60015
      || error.cellphone === 'is invalid'
      || error.country_code === 'is not supported'
      || error.email === 'is invalid'
@@ -50,7 +48,7 @@ function handleAuthyError(res, error) {
 
 function sendErrorResponse(res, status, errorObject) {
   errorObject.success = false;
-  res.json(errorObject);
+  res.json(status, errorObject);
 }
 
 module.exports = handleError;
