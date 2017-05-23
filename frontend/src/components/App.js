@@ -246,7 +246,7 @@ export default class App extends Component {
     return (
       <div className="App">
         <NavBar />
-        <div className="container-fluid">
+        <div className="MainContainer container-fluid">
           { appLoadView }
           { loggedOutView }
           { loggedInView }

@@ -1,3 +1,7 @@
+.MainContainer {
+  min-height: 600px;
+}
+
 .firebase {
   color: #ffca2a;
 }
