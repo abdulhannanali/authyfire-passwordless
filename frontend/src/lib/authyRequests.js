@@ -4,7 +4,7 @@
  * This library for sending requests is stateless. All the states should be there in the components
  */
 import axios from 'axios';
-import { resolve } from 'path';
+import { resolve } from 'url';
 
 const FUNCTIONS_BASE_URL = 'https://us-central1-translate-project-166509.cloudfunctions.net/';
 
