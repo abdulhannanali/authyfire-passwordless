@@ -4,12 +4,12 @@
  * This library for sending requests is stateless. All the states should be there in the components
  */
 import axios from 'axios';
-import path from 'path';
+import { resolve } from 'path';
 
-const FUNCTIONS_BASE_URL = 'https://us-central1-translate-project-166509.cloudfunctions.net/'
+const FUNCTIONS_BASE_URL = 'https://us-central1-translate-project-166509.cloudfunctions.net/';
 
-const requestTokenURL = path.join(FUNCTIONS_BASE_URL, 'requestAuthyToken');
-const verifyTokenURL = path.join(FUNCTIONS_BASE_URL + 'verifyAuthyToken');
+const requestTokenURL = resolve(FUNCTIONS_BASE_URL, 'requestAuthyToken');
+const verifyTokenURL = resolve(FUNCTIONS_BASE_URL, 'verifyAuthyToken');
 
 /**
  * Requests the authy token for the given number
