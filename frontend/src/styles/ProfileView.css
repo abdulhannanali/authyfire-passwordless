@@ -1,0 +1,11 @@
+.ProfileView-panel {
+  min-height: 600px;
+}
+
+.TokenBox {
+  word-wrap: break-word;
+}
+
+.Reenter {
+  margin-top: 20px;
+}

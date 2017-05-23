@@ -1,0 +1,11 @@
+.ProfileImage img {
+  margin: auto;
+  height: 100px;
+  width: 100px;
+  border-radius: 20000px;
+  border: 5px red solid;
+}
+
+.ProfileImage {
+  margin: 40px;
+}

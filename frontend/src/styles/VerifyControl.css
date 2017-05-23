@@ -1,0 +1,11 @@
+.VerificationInput {
+  margin-top: 30px;
+}
+
+.reenter {
+  margin-top: 10px;
+}
+
+.btn:last-child {
+  margin-left: 5px;
+}
