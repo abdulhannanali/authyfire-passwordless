@@ -8,6 +8,7 @@ import NavBar from './NavBar';
 import Authenticator from './Authenticator';
 import ProfileView from './ProfileView';
 import Loader from './Loader';
+import Footer from './Footer';
 
 export default class App extends Component {
   constructor(props) {
@@ -19,18 +20,18 @@ export default class App extends Component {
       // Determines if the Firebase app has loaded completely or not
       appLoad: false,
 
-      phoneNumber: '3012548888',
-      countryCode: '92',
+      phoneNumber: '',
+      countryCode: '',
       token: '',
       
       // ID of the Phone to be used for verifying the token after getting it
-      phoneId: '923012548888',
+      phoneId: '',
 
       // Needed to show a generic loading bar between transition through each state
       loading: false,
 
       // Fields applicable for sending the first token to the user
-      tokenSent: true,
+      tokenSent: false,
       tokenFailed: false,
 
       // `true` if the token was sent again
@@ -250,6 +251,7 @@ export default class App extends Component {
           { loggedOutView }
           { loggedInView }
         </div>
+        <Footer />
       </div>
     );
   }

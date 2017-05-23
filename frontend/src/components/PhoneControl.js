@@ -32,25 +32,30 @@ export default class PhoneControl extends Component {
         <div className={formGroupClasses} style={{ marginTop: '20px'}}>
           <div className="row">
             <div className="col-md-3 col-sm-4">
-              <label className="control-label" htmlFor="countryCode">Country Code</label>
-              <div className="input-group">
-                <div className="input-group-addon">+</div>
-                <input type="text"
-                       className="form-control"
-                       id="countryCode"
-                       value={countryCode}
-                       placeholder="1"
-                       onChange={this.setCountryCode.bind(this)}/>
+              <div className="form-group">
+                <label className="control-label" htmlFor="countryCode">Country Code</label>
+                <div className="input-group">
+                  <div className="input-group-addon">+</div>
+                  <input type="text"
+                        className="form-control"
+                        id="countryCode"
+                        value={countryCode}
+                        placeholder="1"
+                        onChange={this.setCountryCode.bind(this)}/>
+                </div>
               </div>
             </div>
             <div className="col-md-9">
-              <label className="control-label" htmlFor="phoneNumber">Phone number</label>
-              <input type="text" 
-                     className="form-control" 
-                     id="phoneNumber" 
-                     value={phoneNumber} 
-                     onChange={this.setPhoneNumber.bind(this)}
-                     placeholder="301-254-8888"/>
+              <div className="form-group">
+                <label className="control-label" htmlFor="phoneNumber">Phone number</label>
+                <input type="text" 
+                      required
+                      className="form-control" 
+                      id="phoneNumber" 
+                      value={phoneNumber} 
+                      onChange={this.setPhoneNumber.bind(this)}
+                      placeholder="301-254-8888"/>
+              </div>
             </div>
           </div>
           <div className="row">
