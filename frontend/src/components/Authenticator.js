@@ -108,7 +108,7 @@ export default class Authenticator extends Component {
               <div className="container-fluid">
                 <div className="panel panel-default">
                   <div className="panel-body">
-                    <div className="page-header">
+                    <div className="page-header AuthHeading">
                       <h1>{authenticatorHeading}</h1>
                     </div>
                     { errorAlert }

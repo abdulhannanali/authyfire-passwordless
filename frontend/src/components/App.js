@@ -148,7 +148,8 @@ export default class App extends Component {
         }
       })
       .catch(error => {
-        this.setState({ tokenSent: false, loading: false, tokenFailed: true, error });
+        const errorObj = this.parseRequestError(error);
+        this.setState({ tokenSent: false, loading: false, tokenFailed: true, error: errorObj });
       });
   }
 
@@ -169,25 +170,38 @@ export default class App extends Component {
         }
       })
       .catch((error) => {
-        const { response, message } = error;
-        let errorObj;
-
-        if (!response) {
-          errorObj = { message };
-        } else {
-          let message;
-
-          if (response.data.code === 'unexpected-error') {
-            message = 'Something bad happened on our side :\'( , Please try again!';
-          } else {
-            message = response.data.message;
-          }
-
-          errorObj = { message };
-        }
-
+        const errorObj = this.parseRequestError(error);
         this.setState({ error: errorObj, verificationFailed: true, loading: false });
       });
+  }
+
+  /**
+   * Parses the request errors to make them more helpful for the usage
+   * 
+   * Many of the Authy requests implement a standard interface for dealing with errors
+   * so this is useful to parse those errors in order to return appropriate user messages
+   */
+  parseRequestError(error) {
+    const { response, message } = error;
+    const { data: responseData } = response;
+    let errorObj = {};
+
+    if (!response || !responseData) {
+      errorObj = { message };
+    } else if (response) {
+      const { code, message } = responseData;
+      let errorMessage;
+
+      if (code === 'unexepcted-error') {
+        errorMessage = 'Sorry something awful happened on our side :(';
+      } else {
+        errorMessage = message;
+      }
+
+      errorObj.message = errorMessage;
+    }
+
+    return errorObj;
   }
 
   /**
